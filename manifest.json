@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.2",
-  "description": "Legal 4-quadrant sports multi-viewer with Alt+M menu and Alt+C close shortcuts.",
+  "version": "1.3",
+  "description": "Legal 4-quadrant sports multi-viewer with automatic audio focus and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",

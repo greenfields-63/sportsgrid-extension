@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Manages 2x2 grid window creation, Alt+M menu, and Alt+C batch close.
+ * SportsGrid Background Service Worker - Manages 2x2 grid window creation, Alt+M menu, Alt+C batch close, and automatic audio focus.
  */
 
 let activeGridWindowIds = [];
@@ -10,7 +10,6 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.commands.onCommand.addListener(async (command) => {
     if (command === "open-menu") {
-        // Open setup popup as a small window
         await chrome.windows.create({
             url: "popup.html",
             type: "popup",
@@ -32,7 +31,6 @@ async function closeGridWindows() {
 }
 
 async function launchGrid() {
-    // Close any existing grid windows first
     await closeGridWindows();
 
     let urls = [
@@ -84,7 +82,30 @@ async function launchGrid() {
             activeGridWindowIds.push(newWin.id);
         }
     }
+
+    // Default audio focus to the first window, mute the rest
+    if (activeGridWindowIds.length > 0) {
+        updateAudioState(activeGridWindowIds[0]);
+    }
 }
+
+async function updateAudioState(focusedWinId) {
+    for (const winId of activeGridWindowIds) {
+        try {
+            const tabs = await chrome.tabs.query({ windowId: winId, active: true });
+            for (const tab of tabs) {
+                const shouldMute = (winId !== focusedWinId);
+                await chrome.tabs.update(tab.id, { muted: shouldMute });
+            }
+        } catch (e) {}
+    }
+}
+
+chrome.windows.onFocusedChanged.addListener((windowId) => {
+    if (activeGridWindowIds.includes(windowId)) {
+        updateAudioState(windowId);
+    }
+});
 
 chrome.windows.onRemoved.addListener((windowId) => {
     activeGridWindowIds = activeGridWindowIds.filter(id => id !== windowId);
