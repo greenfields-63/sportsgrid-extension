@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Robust window matching close (Alt+C), Alt+M menu, and 2x2 grid launcher.
+ * SportsGrid Background Service Worker - Smart window recycling (no reload for unchanged feeds), Alt+M, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -42,8 +42,6 @@ async function closeGridWindows() {
 }
 
 async function launchGrid() {
-    await closeGridWindows();
-
     let urls = [
         "https://www.espn.com/watch/",
         "https://www.dazn.com/",
@@ -70,21 +68,56 @@ async function launchGrid() {
         { left: halfWidth, top: halfHeight, width: screenWidth - halfWidth, height: screenHeight - halfHeight }
     ];
 
+    let existingWindows = [];
+    try {
+        const windows = await chrome.windows.getAll({ populate: true });
+        existingWindows = windows.filter(win => {
+            return win.type === "popup" && win.tabs && win.tabs.some(tab => {
+                return tab.url && SPORTS_DOMAINS.some(domain => tab.url.includes(domain));
+            });
+        });
+    } catch (e) {}
+
     for (let i = 0; i < urls.length; i++) {
         if (!urls[i]) continue;
+        const targetUrl = urls[i];
         const b = boundsList[i];
-        try {
-            await chrome.windows.create({
-                url: urls[i],
-                type: "popup",
-                left: b.left,
-                top: b.top,
-                width: b.width,
-                height: b.height
-            });
-        } catch (err) {
-            console.error("[SportsGrid] Error creating window:", err);
+
+        const matchingWinIndex = existingWindows.findIndex(win => {
+            return win.tabs.some(tab => tab.url && tab.url.includes(new URL(targetUrl).hostname));
+        });
+
+        if (matchingWinIndex !== -1) {
+            const matchedWin = existingWindows.splice(matchingWinIndex, 1)[0];
+            try {
+                await chrome.windows.update(matchedWin.id, {
+                    left: b.left,
+                    top: b.top,
+                    width: b.width,
+                    height: b.height,
+                    focused: true
+                });
+            } catch (err) {}
+        } else {
+            try {
+                await chrome.windows.create({
+                    url: targetUrl,
+                    type: "popup",
+                    left: b.left,
+                    top: b.top,
+                    width: b.width,
+                    height: b.height
+                });
+            } catch (err) {
+                console.error("[SportsGrid] Error creating window:", err);
+            }
         }
+    }
+
+    for (const leftoverWin of existingWindows) {
+        try {
+            await chrome.windows.remove(leftoverWin.id);
+        } catch (e) {}
     }
 }
 

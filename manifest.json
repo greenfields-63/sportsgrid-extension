@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.8",
-  "description": "Legal 4-quadrant sports multi-viewer with max-zindex mute button, fixed CBS Sports URL, independent settings, and Alt shortcuts.",
+  "version": "1.9",
+  "description": "Legal 4-quadrant sports multi-viewer with smart window recycling (zero reloading for unchanged feeds), Alt shortcuts, and mute buttons.",
   "permissions": [
     "scripting",
     "windows",
