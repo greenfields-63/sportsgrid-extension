@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { width: 260px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #1e1e22; color: #fff; margin: 0; padding: 16px; }
+        h2 { font-size: 15px; margin-bottom: 12px; font-weight: 600; text-align: center; }
+        .quad-group { margin-bottom: 10px; }
+        label { display: block; font-size: 11px; color: #aaa; margin-bottom: 4px; font-weight: 500; }
+        select { width: 100%; padding: 8px; background: #27272a; color: #fff; border: 1px solid #3f3f46; border-radius: 6px; font-size: 12px; }
+        button { width: 100%; padding: 10px; background: #3b82f6; color: #fff; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; margin-top: 12px; }
+        button:hover { background: #2563eb; }
+        .hotkey-hint { font-size: 11px; color: #888; text-align: center; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <h2>SportsGrid Setup</h2>
+    <div class="quad-group">
+        <label>Quadrant 1 (Top-Left)</label>
+        <select id="q0">
+            <option value="https://www.espn.com/watch/">ESPN</option>
+            <option value="https://www.dazn.com/">DAZN</option>
+            <option value="https://www.cbssports.com/watch/">CBS Sports</option>
+            <option value="https://www.nbcsports.com/">NBC Sports</option>
+            <option value="https://www.peacocktv.com/sports">Peacock</option>
+            <option value="https://www.fox.com/home">Fox One</option>
+            <option value="https://www.tbs.com/watchtbs">TBS</option>
+            <option value="https://www.tntdrama.com/watchtnt">TNT</option>
+            <option value="https://www.xfinity.com/stream/listings/favorites">Xfinity Stream</option>
+            <option value="https://www.amazon.com/primevideo/">Prime Video</option>
+            <option value="https://tv.apple.com/">Apple TV+</option>
+        </select>
+    </div>
+    <div class="quad-group">
+        <label>Quadrant 2 (Top-Right)</label>
+        <select id="q1">
+            <option value="https://www.espn.com/watch/" selected>ESPN</option>
+            <option value="https://www.dazn.com/">DAZN</option>
+            <option value="https://www.cbssports.com/watch/">CBS Sports</option>
+            <option value="https://www.nbcsports.com/">NBC Sports</option>
+            <option value="https://www.peacocktv.com/sports">Peacock</option>
+            <option value="https://www.fox.com/home">Fox One</option>
+            <option value="https://www.tbs.com/watchtbs">TBS</option>
+            <option value="https://www.tntdrama.com/watchtnt">TNT</option>
+            <option value="https://www.xfinity.com/stream/listings/favorites">Xfinity Stream</option>
+            <option value="https://www.amazon.com/primevideo/">Prime Video</option>
+            <option value="https://tv.apple.com/">Apple TV+</option>
+        </select>
+    </div>
+    <div class="quad-group">
+        <label>Quadrant 3 (Bottom-Left)</label>
+        <select id="q2">
+            <option value="https://www.espn.com/watch/">ESPN</option>
+            <option value="https://www.dazn.com/">DAZN</option>
+            <option value="https://www.cbssports.com/watch/">CBS Sports</option>
+            <option value="https://www.nbcsports.com/">NBC Sports</option>
+            <option value="https://www.peacocktv.com/sports">Peacock</option>
+            <option value="https://www.fox.com/home" selected>Fox One</option>
+            <option value="https://www.tbs.com/watchtbs">TBS</option>
+            <option value="https://www.tntdrama.com/watchtnt">TNT</option>
+            <option value="https://www.xfinity.com/stream/listings/favorites">Xfinity Stream</option>
+            <option value="https://www.amazon.com/primevideo/">Prime Video</option>
+            <option value="https://tv.apple.com/">Apple TV+</option>
+        </select>
+    </div>
+    <div class="quad-group">
+        <label>Quadrant 4 (Bottom-Right)</label>
+        <select id="q3">
+            <option value="https://www.espn.com/watch/">ESPN</option>
+            <option value="https://www.dazn.com/">DAZN</option>
+            <option value="https://www.cbssports.com/watch/">CBS Sports</option>
+            <option value="https://www.nbcsports.com/">NBC Sports</option>
+            <option value="https://www.peacocktv.com/sports">Peacock</option>
+            <option value="https://www.fox.com/home">Fox One</option>
+            <option value="https://www.tbs.com/watchtbs">TBS</option>
+            <option value="https://www.tntdrama.com/watchtnt">TNT</option>
+            <option value="https://www.xfinity.com/stream/listings/favorites" selected>Xfinity Stream</option>
+            <option value="https://www.amazon.com/primevideo/">Prime Video</option>
+            <option value="https://tv.apple.com/">Apple TV+</option>
+        </select>
+    </div>
+    <button id="save-btn">Save & Launch Grid</button>
+    <div class="hotkey-hint">Shortcut: Cmd+Shift+S (Mac) / Ctrl+Shift+S</div>
+    <script src="popup.js"></script>
+</body>
+</html>
