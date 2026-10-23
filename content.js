@@ -1,12 +1,11 @@
 /**
- * SportsGrid Content Script - Quadrant-locked fullscreen and persistent SPA-proof Mute/Unmute button.
+ * SportsGrid Content Script - Quadrant-locked fullscreen and max-zindex persistent mute button.
  */
 
 (function() {
     if (window.sportsGridInjected) return;
     window.sportsGridInjected = true;
 
-    // 1. Persistent Mute/Unmute Button Overlay with MutationObserver & Interval checks
     function injectAudioToggle() {
         if (document.getElementById('sportsgrid-audio-btn')) return;
 
@@ -14,21 +13,20 @@
         btn.id = 'sportsgrid-audio-btn';
         btn.innerHTML = '🔊 Mute';
         btn.style.cssText = `
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 999998;
-            background: rgba(0, 0, 0, 0.75);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.6);
-            transition: all 0.2s ease;
+            position: fixed !important;
+            top: 10px !important;
+            right: 10px !important;
+            z-index: 2147483647 !important;
+            background: rgba(0, 0, 0, 0.85) !important;
+            color: #fff !important;
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            padding: 6px 12px !important;
+            border-radius: 6px !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            backdrop-filter: blur(4px) !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.8) !important;
         `;
 
         let isMuted = false;
@@ -40,25 +38,26 @@
                 el.muted = isMuted;
             });
             btn.innerHTML = isMuted ? '🔇 Unmute' : '🔊 Mute';
-            btn.style.background = isMuted ? 'rgba(239, 68, 68, 0.85)' : 'rgba(0, 0, 0, 0.75)';
+            btn.style.background = isMuted ? 'rgba(239, 68, 68, 0.9) !important' : 'rgba(0, 0, 0, 0.85) !important';
         });
 
-        if (document.body) {
-            document.body.appendChild(btn);
+        const targetRoot = document.documentElement || document.body;
+        if (targetRoot) {
+            targetRoot.appendChild(btn);
         }
     }
 
     injectAudioToggle();
-    setInterval(injectAudioToggle, 1500);
+    setInterval(injectAudioToggle, 1000);
 
     const observer = new MutationObserver(() => {
         injectAudioToggle();
     });
-    if (document.body) {
-        observer.observe(document.body, { childList: true, subtree: true });
+    if (document.documentElement) {
+        observer.observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    // 2. Fullscreen Interception
+    // Fullscreen Interception
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
             const target = document.fullscreenElement;
@@ -70,7 +69,7 @@
             target.style.left = '0';
             target.style.width = '100vw';
             target.style.height = '100vh';
-            target.style.zIndex = '999999';
+            target.style.zIndex = '2147483646';
             target.style.backgroundColor = '#000';
 
             const escHandler = (e) => {

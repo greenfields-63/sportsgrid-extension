@@ -1,13 +1,21 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const stored = await chrome.storage.local.get("sportsgrid_urls");
-        if (stored.sportsgrid_urls && Array.isArray(stored.sportsgrid_urls)) {
-            for (let i = 0; i < 4; i++) {
-                if (stored.sportsgrid_urls[i]) {
-                    const selectEl = document.getElementById(`q${i}`);
-                    if (selectEl) {
-                        selectEl.value = stored.sportsgrid_urls[i];
-                    }
+        let urls = stored.sportsgrid_urls;
+        if (!urls || !Array.isArray(urls) || urls.length < 4) {
+            urls = [
+                "https://www.espn.com/watch/",
+                "https://www.dazn.com/",
+                "https://www.amazon.com/primevideo/",
+                "https://tv.apple.com/"
+            ];
+            await chrome.storage.local.set({ sportsgrid_urls: urls });
+        }
+        for (let i = 0; i < 4; i++) {
+            if (urls[i]) {
+                const selectEl = document.getElementById(`q${i}`);
+                if (selectEl) {
+                    selectEl.value = urls[i];
                 }
             }
         }
