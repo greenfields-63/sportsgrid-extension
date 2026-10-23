@@ -1,8 +1,6 @@
 /**
- * SportsGrid Background Service Worker - Bulletproof 2x2 grid window creation, Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - Robust window matching close (Alt+C), Alt+M menu, and 2x2 grid launcher.
  */
-
-let activeGridWindowIds = [];
 
 chrome.runtime.onInstalled.addListener(() => {
     console.log("[SportsGrid] Extension installed.");
@@ -21,13 +19,26 @@ chrome.commands.onCommand.addListener(async (command) => {
     }
 });
 
+const SPORTS_DOMAINS = [
+    "dazn.com", "espn.com", "amazon.com", "apple.com", "peacocktv.com",
+    "youtube.com", "ballysports.com", "cbssports.com", "nbcsports.com",
+    "fox.com", "tbs.com", "tntdrama.com", "xfinity.com"
+];
+
 async function closeGridWindows() {
-    for (const winId of activeGridWindowIds) {
-        try {
-            await chrome.windows.remove(winId);
-        } catch (e) {}
-    }
-    activeGridWindowIds = [];
+    try {
+        const windows = await chrome.windows.getAll({ populate: true });
+        for (const win of windows) {
+            if (win.type === "popup" && win.tabs) {
+                const isSportsWindow = win.tabs.some(tab => {
+                    return tab.url && SPORTS_DOMAINS.some(domain => tab.url.includes(domain));
+                });
+                if (isSportsWindow) {
+                    await chrome.windows.remove(win.id);
+                }
+            }
+        }
+    } catch (e) {}
 }
 
 async function launchGrid() {
@@ -63,7 +74,7 @@ async function launchGrid() {
         if (!urls[i]) continue;
         const b = boundsList[i];
         try {
-            const newWin = await chrome.windows.create({
+            await chrome.windows.create({
                 url: urls[i],
                 type: "popup",
                 left: b.left,
@@ -71,18 +82,11 @@ async function launchGrid() {
                 width: b.width,
                 height: b.height
             });
-            if (newWin && newWin.id) {
-                activeGridWindowIds.push(newWin.id);
-            }
         } catch (err) {
             console.error("[SportsGrid] Error creating window:", err);
         }
     }
 }
-
-chrome.windows.onRemoved.addListener((windowId) => {
-    activeGridWindowIds = activeGridWindowIds.filter(id => id !== windowId);
-});
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "launch-grid") {

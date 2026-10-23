@@ -1,21 +1,67 @@
 /**
- * SportsGrid Content Script - Listens for fullscreenchange events,
- * exits true monitor fullscreen, and forces the player to fill the quadrant window.
+ * SportsGrid Content Script - Quadrant-locked fullscreen and injected Mute/Unmute corner button.
  */
 
 (function() {
     if (window.sportsGridInjected) return;
     window.sportsGridInjected = true;
 
+    // 1. Injected Mute/Unmute Button Overlay
+    function injectAudioToggle() {
+        if (document.getElementById('sportsgrid-audio-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'sportsgrid-audio-btn';
+        btn.innerHTML = '🔊 Mute';
+        btn.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 999998;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+            transition: all 0.2s ease;
+        `;
+
+        let isMuted = false;
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isMuted = !isMuted;
+            const mediaEls = document.querySelectorAll('video, audio');
+            mediaEls.forEach(el => {
+                el.muted = isMuted;
+            });
+            btn.innerHTML = isMuted ? '🔇 Unmute' : '🔊 Mute';
+            btn.style.background = isMuted ? 'rgba(239, 68, 68, 0.85)' : 'rgba(0, 0, 0, 0.75)';
+        });
+
+        if (document.body) {
+            document.body.appendChild(btn);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectAudioToggle);
+    } else {
+        injectAudioToggle();
+    }
+    setTimeout(injectAudioToggle, 2000);
+
+    // 2. Fullscreen Interception
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
-            console.log("[SportsGrid] Fullscreen detected. Locking to quadrant.");
             const target = document.fullscreenElement;
-
             if (document.exitFullscreen) {
                 document.exitFullscreen().catch(() => {});
             }
-
             target.style.position = 'fixed';
             target.style.top = '0';
             target.style.left = '0';
@@ -37,22 +83,6 @@
                 }
             };
             document.addEventListener('keydown', escHandler);
-        }
-    });
-
-    document.addEventListener('webkitfullscreenchange', () => {
-        if (document.webkitFullscreenElement) {
-            const target = document.webkitFullscreenElement;
-            if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            }
-            target.style.position = 'fixed';
-            target.style.top = '0';
-            target.style.left = '0';
-            target.style.width = '100vw';
-            target.style.height = '100vh';
-            target.style.zIndex = '999999';
-            target.style.backgroundColor = '#000';
         }
     });
 })();
