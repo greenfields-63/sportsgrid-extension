@@ -1,14 +1,13 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.3",
-  "description": "Legal 4-quadrant sports multi-viewer with automatic audio focus and Alt shortcuts.",
+  "version": "1.4",
+  "description": "Legal 4-quadrant sports multi-viewer with bulletproof background service worker and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",
     "windows",
-    "storage",
-    "system.display"
+    "storage"
   ],
   "host_permissions": [
     "https://*.dazn.com/*",

@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Manages 2x2 grid window creation, Alt+M menu, Alt+C batch close, and automatic audio focus.
+ * SportsGrid Background Service Worker - Bulletproof 2x2 grid window creation, Alt+M, Alt+C, and audio focus.
  */
 
 let activeGridWindowIds = [];
@@ -47,16 +47,9 @@ async function launchGrid() {
         }
     } catch (e) {}
 
-    let screenWidth = 1440;
-    let screenHeight = 900;
-
-    try {
-        const display = await chrome.system.display.getInfo();
-        const primary = display.find(d => d.isPrimary) || display[0];
-        screenWidth = primary.workArea.width;
-        screenHeight = primary.workArea.height;
-    } catch (e) {}
-
+    // Bulletproof standard dimensions
+    const screenWidth = 1440;
+    const screenHeight = 900;
     const halfWidth = Math.floor(screenWidth / 2);
     const halfHeight = Math.floor(screenHeight / 2);
 
@@ -70,20 +63,23 @@ async function launchGrid() {
     for (let i = 0; i < urls.length; i++) {
         if (!urls[i]) continue;
         const b = boundsList[i];
-        const newWin = await chrome.windows.create({
-            url: urls[i],
-            type: "popup",
-            left: b.left,
-            top: b.top,
-            width: b.width,
-            height: b.height
-        });
-        if (newWin && newWin.id) {
-            activeGridWindowIds.push(newWin.id);
+        try {
+            const newWin = await chrome.windows.create({
+                url: urls[i],
+                type: "popup",
+                left: b.left,
+                top: b.top,
+                width: b.width,
+                height: b.height
+            });
+            if (newWin && newWin.id) {
+                activeGridWindowIds.push(newWin.id);
+            }
+        } catch (err) {
+            console.error("[SportsGrid] Error creating window:", err);
         }
     }
 
-    // Default audio focus to the first window, mute the rest
     if (activeGridWindowIds.length > 0) {
         updateAudioState(activeGridWindowIds[0]);
     }
