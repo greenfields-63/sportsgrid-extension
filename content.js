@@ -1,12 +1,12 @@
 /**
- * SportsGrid Content Script - Quadrant-locked fullscreen and injected Mute/Unmute corner button.
+ * SportsGrid Content Script - Quadrant-locked fullscreen and persistent SPA-proof Mute/Unmute button.
  */
 
 (function() {
     if (window.sportsGridInjected) return;
     window.sportsGridInjected = true;
 
-    // 1. Injected Mute/Unmute Button Overlay
+    // 1. Persistent Mute/Unmute Button Overlay with MutationObserver & Interval checks
     function injectAudioToggle() {
         if (document.getElementById('sportsgrid-audio-btn')) return;
 
@@ -48,12 +48,15 @@
         }
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', injectAudioToggle);
-    } else {
+    injectAudioToggle();
+    setInterval(injectAudioToggle, 1500);
+
+    const observer = new MutationObserver(() => {
         injectAudioToggle();
+    });
+    if (document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
     }
-    setTimeout(injectAudioToggle, 2000);
 
     // 2. Fullscreen Interception
     document.addEventListener('fullscreenchange', () => {

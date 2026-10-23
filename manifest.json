@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.6",
-  "description": "Legal 4-quadrant sports multi-viewer with per-quadrant mute buttons, robust Alt+C close, and Alt+M menu.",
+  "version": "1.7",
+  "description": "Legal 4-quadrant sports multi-viewer with persistent SPA-proof mute button, independent quadrant settings, and Alt shortcuts.",
   "permissions": [
     "scripting",
     "windows",

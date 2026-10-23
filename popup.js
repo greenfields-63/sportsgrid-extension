@@ -4,7 +4,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (stored.sportsgrid_urls && Array.isArray(stored.sportsgrid_urls)) {
             for (let i = 0; i < 4; i++) {
                 if (stored.sportsgrid_urls[i]) {
-                    document.getElementById(`q${i}`).value = stored.sportsgrid_urls[i];
+                    const selectEl = document.getElementById(`q${i}`);
+                    if (selectEl) {
+                        selectEl.value = stored.sportsgrid_urls[i];
+                    }
                 }
             }
         }
