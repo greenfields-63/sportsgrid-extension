@@ -1,10 +1,9 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.4",
-  "description": "Legal 4-quadrant sports multi-viewer with bulletproof background service worker and Alt shortcuts.",
+  "version": "1.5",
+  "description": "Legal 4-quadrant sports multi-viewer with 2x2 grid launcher, Alt shortcuts, and quadrant-locked fullscreen.",
   "permissions": [
-    "tabs",
     "scripting",
     "windows",
     "storage"

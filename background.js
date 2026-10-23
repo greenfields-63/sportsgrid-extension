@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Bulletproof 2x2 grid window creation, Alt+M, Alt+C, and audio focus.
+ * SportsGrid Background Service Worker - Bulletproof 2x2 grid window creation, Alt+M, and Alt+C.
  */
 
 let activeGridWindowIds = [];
@@ -47,7 +47,6 @@ async function launchGrid() {
         }
     } catch (e) {}
 
-    // Bulletproof standard dimensions
     const screenWidth = 1440;
     const screenHeight = 900;
     const halfWidth = Math.floor(screenWidth / 2);
@@ -79,29 +78,7 @@ async function launchGrid() {
             console.error("[SportsGrid] Error creating window:", err);
         }
     }
-
-    if (activeGridWindowIds.length > 0) {
-        updateAudioState(activeGridWindowIds[0]);
-    }
 }
-
-async function updateAudioState(focusedWinId) {
-    for (const winId of activeGridWindowIds) {
-        try {
-            const tabs = await chrome.tabs.query({ windowId: winId, active: true });
-            for (const tab of tabs) {
-                const shouldMute = (winId !== focusedWinId);
-                await chrome.tabs.update(tab.id, { muted: shouldMute });
-            }
-        } catch (e) {}
-    }
-}
-
-chrome.windows.onFocusedChanged.addListener((windowId) => {
-    if (activeGridWindowIds.includes(windowId)) {
-        updateAudioState(windowId);
-    }
-});
 
 chrome.windows.onRemoved.addListener((windowId) => {
     activeGridWindowIds = activeGridWindowIds.filter(id => id !== windowId);
