@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Smart window recycling (no reload for unchanged feeds), Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - Smart window recycling, default audio selector, Alt+M, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -11,8 +11,8 @@ chrome.commands.onCommand.addListener(async (command) => {
         await chrome.windows.create({
             url: "popup.html",
             type: "popup",
-            width: 300,
-            height: 420
+            width: 320,
+            height: 520
         });
     } else if (command === "close-grid") {
         closeGridWindows();
@@ -48,11 +48,15 @@ async function launchGrid() {
         "https://www.amazon.com/primevideo/",
         "https://tv.apple.com/"
     ];
+    let defaultAudioIndex = 0;
 
     try {
-        const stored = await chrome.storage.local.get("sportsgrid_urls");
+        const stored = await chrome.storage.local.get(["sportsgrid_urls", "sportsgrid_audio_index"]);
         if (stored.sportsgrid_urls && Array.isArray(stored.sportsgrid_urls)) {
             urls = stored.sportsgrid_urls;
+        }
+        if (typeof stored.sportsgrid_audio_index === 'number') {
+            defaultAudioIndex = stored.sportsgrid_audio_index;
         }
     } catch (e) {}
 
@@ -82,6 +86,7 @@ async function launchGrid() {
         if (!urls[i]) continue;
         const targetUrl = urls[i];
         const b = boundsList[i];
+        const shouldMute = (i !== defaultAudioIndex);
 
         const matchingWinIndex = existingWindows.findIndex(win => {
             return win.tabs.some(tab => tab.url && tab.url.includes(new URL(targetUrl).hostname));
@@ -97,10 +102,15 @@ async function launchGrid() {
                     height: b.height,
                     focused: true
                 });
+                // Update audio mute state on active tab
+                const tabs = await chrome.tabs.query({ windowId: matchedWin.id, active: true });
+                for (const tab of tabs) {
+                    await chrome.tabs.update(tab.id, { muted: shouldMute });
+                }
             } catch (err) {}
         } else {
             try {
-                await chrome.windows.create({
+                const newWin = await chrome.windows.create({
                     url: targetUrl,
                     type: "popup",
                     left: b.left,
@@ -108,6 +118,12 @@ async function launchGrid() {
                     width: b.width,
                     height: b.height
                 });
+                if (newWin && newWin.id) {
+                    const tabs = await chrome.tabs.query({ windowId: newWin.id, active: true });
+                    for (const tab of tabs) {
+                        await chrome.tabs.update(tab.id, { muted: shouldMute });
+                    }
+                }
             } catch (err) {
                 console.error("[SportsGrid] Error creating window:", err);
             }
@@ -124,6 +140,6 @@ async function launchGrid() {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "launch-grid") {
         launchGrid();
-        sendResponse({ success: true });
+        sendResponse({ success: true});
     }
 });

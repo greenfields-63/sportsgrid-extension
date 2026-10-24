@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const stored = await chrome.storage.local.get("sportsgrid_urls");
+        const stored = await chrome.storage.local.get(["sportsgrid_urls", "sportsgrid_audio_index"]);
         let urls = stored.sportsgrid_urls;
         if (!urls || !Array.isArray(urls) || urls.length < 4) {
             urls = [
@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         }
+
+        const audioIndex = typeof stored.sportsgrid_audio_index === 'number' ? stored.sportsgrid_audio_index : 0;
+        const radioEl = document.getElementById(`audio-${audioIndex}`);
+        if (radioEl) {
+            radioEl.checked = true;
+        } else {
+            document.getElementById('audio-0').checked = true;
+        }
     } catch (e) {}
 });
 
@@ -30,7 +38,20 @@ document.getElementById('save-btn').addEventListener('click', async () => {
         document.getElementById('q3').value
     ];
 
-    await chrome.storage.local.set({ sportsgrid_urls: urls });
+    let audioIndex = 0;
+    for (let i = 0; i < 4; i++) {
+        const radio = document.getElementById(`audio-${i}`);
+        if (radio && radio.checked) {
+            audioIndex = i;
+            break;
+        }
+    }
+
+    await chrome.storage.local.set({
+        sportsgrid_urls: urls,
+        sportsgrid_audio_index: audioIndex
+    });
+
     chrome.runtime.sendMessage({ action: "launch-grid" }, (response) => {
         window.close();
     });

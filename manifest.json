@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.9",
-  "description": "Legal 4-quadrant sports multi-viewer with smart window recycling (zero reloading for unchanged feeds), Alt shortcuts, and mute buttons.",
+  "version": "1.10",
+  "description": "Legal 4-quadrant sports multi-viewer with default audio selector in menu, Alt+V VPN hotkey, Alt+M menu, and Alt+C close.",
   "permissions": [
+    "tabs",
     "scripting",
     "windows",
     "storage"
@@ -43,6 +44,13 @@
         "mac": "Alt+C"
       },
       "description": "Close All Sports Grid Windows"
+    },
+    "vpn-toggle": {
+      "suggested_key": {
+        "default": "Alt+V",
+        "mac": "Alt+V"
+      },
+      "description": "Toggle VPN Setting"
     }
   },
   "content_scripts": [
