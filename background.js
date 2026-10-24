@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Smart window recycling, corner speaker switcher, Alt+S quick audio switch, Alt+M menu, and Alt+C.
+ * SportsGrid Background Service Worker - Smart window recycling, corner speaker switcher, Alt+S quick audio switch, Alt+V VPN helper, Alt+M menu, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -20,6 +20,13 @@ chrome.commands.onCommand.addListener(async (command) => {
             type: "popup",
             width: 280,
             height: 260
+        });
+    } else if (command === "vpn-toggle") {
+        await chrome.windows.create({
+            url: "vpn.html",
+            type: "popup",
+            width: 280,
+            height: 180
         });
     } else if (command === "close-grid") {
         closeGridWindows();
