@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Smart window recycling, default audio selector, Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - Smart window recycling, Alt+S quick audio switch, Alt+M menu, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -13,6 +13,13 @@ chrome.commands.onCommand.addListener(async (command) => {
             type: "popup",
             width: 320,
             height: 520
+        });
+    } else if (command === "sound-menu") {
+        await chrome.windows.create({
+            url: "sound.html",
+            type: "popup",
+            width: 280,
+            height: 260
         });
     } else if (command === "close-grid") {
         closeGridWindows();
@@ -36,6 +43,25 @@ async function closeGridWindows() {
                 if (isSportsWindow) {
                     await chrome.windows.remove(win.id);
                 }
+            }
+        }
+    } catch (e) {}
+}
+
+async function applyAudioFocus(defaultAudioIndex) {
+    try {
+        const windows = await chrome.windows.getAll({ populate: true });
+        const sportsWindows = windows.filter(win => {
+            return win.type === "popup" && win.tabs && win.tabs.some(tab => {
+                return tab.url && SPORTS_DOMAINS.some(domain => tab.url.includes(domain));
+            });
+        });
+
+        for (let i = 0; i < sportsWindows.length; i++) {
+            const shouldMute = (i !== defaultAudioIndex);
+            const win = sportsWindows[i];
+            for (const tab of win.tabs) {
+                await chrome.tabs.update(tab.id, { muted: shouldMute });
             }
         }
     } catch (e) {}
@@ -86,7 +112,6 @@ async function launchGrid() {
         if (!urls[i]) continue;
         const targetUrl = urls[i];
         const b = boundsList[i];
-        const shouldMute = (i !== defaultAudioIndex);
 
         const matchingWinIndex = existingWindows.findIndex(win => {
             return win.tabs.some(tab => tab.url && tab.url.includes(new URL(targetUrl).hostname));
@@ -102,15 +127,10 @@ async function launchGrid() {
                     height: b.height,
                     focused: true
                 });
-                // Update audio mute state on active tab
-                const tabs = await chrome.tabs.query({ windowId: matchedWin.id, active: true });
-                for (const tab of tabs) {
-                    await chrome.tabs.update(tab.id, { muted: shouldMute });
-                }
             } catch (err) {}
         } else {
             try {
-                const newWin = await chrome.windows.create({
+                await chrome.windows.create({
                     url: targetUrl,
                     type: "popup",
                     left: b.left,
@@ -118,12 +138,6 @@ async function launchGrid() {
                     width: b.width,
                     height: b.height
                 });
-                if (newWin && newWin.id) {
-                    const tabs = await chrome.tabs.query({ windowId: newWin.id, active: true });
-                    for (const tab of tabs) {
-                        await chrome.tabs.update(tab.id, { muted: shouldMute });
-                    }
-                }
             } catch (err) {
                 console.error("[SportsGrid] Error creating window:", err);
             }
@@ -135,11 +149,19 @@ async function launchGrid() {
             await chrome.windows.remove(leftoverWin.id);
         } catch (e) {}
     }
+
+    // Apply audio focus after windows are settled
+    setTimeout(() => {
+        applyAudioFocus(defaultAudioIndex);
+    }, 1000);
 }
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "launch-grid") {
         launchGrid();
-        sendResponse({ success: true});
+        sendResponse({ success: true });
+    } else if (request.action === "update-audio") {
+        applyAudioFocus(request.audioIndex);
+        sendResponse({ success: true });
     }
 });
