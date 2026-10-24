@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (urls[i]) {
                 const selectEl = document.getElementById(`q${i}`);
                 if (selectEl) {
-                    selectEl.value = urls[i];
+                    setSelectValueOrAddCustom(selectEl, urls[i]);
                 }
             }
         }
@@ -29,6 +29,41 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (e) {}
 });
+
+function setSelectValueOrAddCustom(selectEl, url) {
+    let found = false;
+    for (let opt of selectEl.options) {
+        if (opt.value === url || opt.value.replace(/\/$/, '') === url.replace(/\/$/, '')) {
+            selectEl.value = opt.value;
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        const opt = document.createElement('option');
+        opt.value = url;
+        opt.textContent = `Custom: ${url}`;
+        selectEl.insertBefore(opt, selectEl.querySelector('option[value="custom"]'));
+        selectEl.value = url;
+    }
+}
+
+for (let i = 0; i < 4; i++) {
+    const selectEl = document.getElementById(`q${i}`);
+    if (selectEl) {
+        selectEl.addEventListener('change', () => {
+            if (selectEl.value === 'custom') {
+                const customUrl = prompt("Enter custom streaming URL (e.g. https://...):", "https://");
+                if (customUrl && customUrl.trim().startsWith('http')) {
+                    const cleanUrl = customUrl.trim();
+                    setSelectValueOrAddCustom(selectEl, cleanUrl);
+                } else {
+                    selectEl.value = "https://www.espn.com/watch/";
+                }
+            }
+        });
+    }
+}
 
 document.getElementById('save-btn').addEventListener('click', async () => {
     const urls = [

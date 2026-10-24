@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.13",
-  "description": "Legal 4-quadrant sports multi-viewer with Alt+V VPN helper, corner speaker switcher, Alt+S quick audio switch, Alt+M menu, and Alt+C close.",
+  "version": "1.14",
+  "description": "Legal 4-quadrant sports multi-viewer with custom URL input, default audio selector, Alt shortcuts, and smart window recycling.",
   "permissions": [
     "tabs",
     "scripting",
@@ -10,19 +10,7 @@
     "storage"
   ],
   "host_permissions": [
-    "https://*.dazn.com/*",
-    "https://*.espn.com/*",
-    "https://*.amazon.com/*",
-    "https://*.apple.com/*",
-    "https://*.peacocktv.com/*",
-    "https://*.youtube.com/*",
-    "https://*.ballysports.com/*",
-    "https://*.cbssports.com/*",
-    "https://*.nbcsports.com/*",
-    "https://*.fox.com/*",
-    "https://*.tbs.com/*",
-    "https://*.tntdrama.com/*",
-    "https://*.xfinity.com/*"
+    "https://*/*"
   ],
   "action": {
     "default_popup": "popup.html"
@@ -63,19 +51,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.dazn.com/*",
-        "https://*.espn.com/*",
-        "https://*.amazon.com/*",
-        "https://*.apple.com/*",
-        "https://*.peacocktv.com/*",
-        "https://*.youtube.com/*",
-        "https://*.ballysports.com/*",
-        "https://*.cbssports.com/*",
-        "https://*.nbcsports.com/*",
-        "https://*.fox.com/*",
-        "https://*.tbs.com/*",
-        "https://*.tntdrama.com/*",
-        "https://*.xfinity.com/*"
+        "https://*/*"
       ],
       "js": ["content.js"],
       "run_at": "document_end"
