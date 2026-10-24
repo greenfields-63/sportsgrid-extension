@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.11",
-  "description": "Legal 4-quadrant sports multi-viewer with Alt+S quick audio switch, Alt+M setup menu, and Alt+C close.",
+  "version": "1.12",
+  "description": "Legal 4-quadrant sports multi-viewer with corner speaker switcher, Alt+S quick audio switch, Alt+M menu, and Alt+C close.",
   "permissions": [
     "tabs",
     "scripting",

@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Smart window recycling, Alt+S quick audio switch, Alt+M menu, and Alt+C.
+ * SportsGrid Background Service Worker - Smart window recycling, corner speaker switcher, Alt+S quick audio switch, Alt+M menu, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -57,11 +57,16 @@ async function applyAudioFocus(defaultAudioIndex) {
             });
         });
 
+        await chrome.storage.local.set({ sportsgrid_audio_index: defaultAudioIndex });
+
         for (let i = 0; i < sportsWindows.length; i++) {
             const shouldMute = (i !== defaultAudioIndex);
             const win = sportsWindows[i];
             for (const tab of win.tabs) {
                 await chrome.tabs.update(tab.id, { muted: shouldMute });
+                try {
+                    await chrome.tabs.sendMessage(tab.id, { action: "update-speaker-state", isMuted: shouldMute });
+                } catch (e) {}
             }
         }
     } catch (e) {}
@@ -150,18 +155,33 @@ async function launchGrid() {
         } catch (e) {}
     }
 
-    // Apply audio focus after windows are settled
     setTimeout(() => {
         applyAudioFocus(defaultAudioIndex);
     }, 1000);
 }
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     if (request.action === "launch-grid") {
         launchGrid();
         sendResponse({ success: true });
     } else if (request.action === "update-audio") {
         applyAudioFocus(request.audioIndex);
+        sendResponse({ success: true });
+    } else if (request.action === "make-active-audio") {
+        if (sender.tab && sender.tab.windowId) {
+            try {
+                const windows = await chrome.windows.getAll({ populate: true });
+                const sportsWindows = windows.filter(win => {
+                    return win.type === "popup" && win.tabs && win.tabs.some(tab => {
+                        return tab.url && SPORTS_DOMAINS.some(domain => tab.url.includes(domain));
+                    });
+                });
+                const index = sportsWindows.findIndex(win => win.id === sender.tab.windowId);
+                if (index !== -1) {
+                    applyAudioFocus(index);
+                }
+            } catch (e) {}
+        }
         sendResponse({ success: true });
     }
 });
