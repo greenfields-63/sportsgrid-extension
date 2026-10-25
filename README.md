@@ -1,11 +1,11 @@
-# SportsGrid Multi-Viewer (Chrome Extension v1.22)
+# SportsGrid Multi-Viewer (Chrome Extension v1.25)
 
-A professional 4-quadrant Chrome Extension designed for watching multiple legal sports feeds simultaneously (ESPN, DAZN, CBS Sports, NBC Sports, Peacock, Fox One, TBS, TNT, Xfinity Stream, Prime Video, Apple TV+, or any custom stream URL) in a clean 2x2 grid with quadrant-locked fullscreen and instant audio switching.
+A professional 4-quadrant Chrome Extension designed for watching multiple legal sports feeds simultaneously (ESPN, DAZN, CBS Sports, NBC Sports, Peacock, Fox One, TBS, TNT, Xfinity Stream, Prime Video, Apple TV+, or any custom stream URL) in a clean 2x2 grid with dynamic screen sizing, quadrant-locked fullscreen, and instant audio switching.
 
 ---
 
 ## Features
-- **4-Quadrant Multi-Viewer Layout**: Automatically launches 4 independent, borderless popup windows snapped into a 2x2 screen grid with smart window recycling (unedited streams stay open and playing continuously without reloading when saving settings).
+- **4-Quadrant Multi-Viewer Layout**: Automatically launches 4 independent, borderless popup windows snapped into a 2x2 screen grid that dynamically scales edge-to-edge based on your monitor's exact resolution (laptop, 1080p, 1440p, or 4K), complete with smart window recycling.
 - **Quadrant-Locked Fullscreen**: Intercepts native video player fullscreen requests so that clicking fullscreen on any player expands it strictly to fill its quadrant rather than taking over your entire monitor.
 - **Injected Corner Speaker Switcher**: Every quadrant features a clean speaker icon (`🔊`/`🔇`) in the top-right corner. Clicking it instantly shifts active audio focus to that quadrant and mutes the others.
 - **Keyboard Shortcut Suite**:
