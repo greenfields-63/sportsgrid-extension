@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.17",
-  "description": "Legal 4-quadrant sports multi-viewer with Cancel button on Alt+M menu, 1-to-1 quadrant mapping, and Alt shortcuts.",
+  "version": "1.18",
+  "description": "Legal 4-quadrant sports multi-viewer with persistent slot tracking (zero unedited reloads), Cancel button, and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",
