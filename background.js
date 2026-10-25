@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Robust corner speaker switching, persistent slot tracking, Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - Hostname-based window recycling (zero unedited reloads), Alt+M, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -119,12 +119,16 @@ async function launchGrid() {
         const b = boundsList[i];
         const existingWinId = currentWindowIds[i];
 
+        let targetHost = "";
+        try { targetHost = new URL(targetUrl).hostname; } catch(e) {}
+
         let windowExists = false;
         if (existingWinId) {
             try {
                 const win = await chrome.windows.get(existingWinId, { populate: true });
                 if (win && win.type === "popup") {
                     windowExists = true;
+                    // Update bounds
                     await chrome.windows.update(win.id, {
                         left: b.left,
                         top: b.top,
@@ -132,9 +136,13 @@ async function launchGrid() {
                         height: b.height,
                         focused: true
                     });
+                    // Update URL ONLY if hostname changed
                     if (win.tabs && win.tabs[0]) {
                         const currentTabUrl = win.tabs[0].url || "";
-                        if (currentTabUrl !== targetUrl) {
+                        let currentHost = "";
+                        try { currentHost = new URL(currentTabUrl).hostname; } catch(e) {}
+
+                        if (!targetHost || !currentHost || !currentHost.includes(targetHost) && !targetHost.includes(currentHost)) {
                             await chrome.tabs.update(win.tabs[0].id, { url: targetUrl });
                         }
                     }
@@ -187,13 +195,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             try {
                 const stored = await chrome.storage.local.get("sportsgrid_window_ids");
                 const windowIds = stored.sportsgrid_window_ids || [];
-                let index = windowIds.findIndex(id => Number(id) === Number(sender.tab.windowId));
+                let index = windowIds.indexOf(sender.tab.windowId);
                 if (index === -1) {
-                    const windows = await chrome.windows.getAll({ populate: true });
-                    const sportsWindows = windows.filter(win => {
-                        return win.type === "popup" && win.tabs && win.tabs.some(tab => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
-                    });
-                    index = sportsWindows.findIndex(win => win.id === sender.tab.windowId);
+                    index = windowIds.findIndex(id => Number(id) === Number(sender.tab.windowId));
                 }
                 if (index !== -1) {
                     applyAudioFocus(index);
