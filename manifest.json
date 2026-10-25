@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.20",
-  "description": "Legal 4-quadrant sports multi-viewer with robust hostname-based window recycling (zero unedited reloads), audio switcher, and Alt shortcuts.",
+  "version": "1.21",
+  "description": "Legal 4-quadrant sports multi-viewer with spatial grid sorting for 1-click corner speakers, smart window recycling, and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",
