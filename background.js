@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Dynamic screen resolution detection, 1-to-1 quadrant mapping, Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - Robust targeted content script injection, dynamic sizing, 1-to-1 mapping, and Alt shortcuts.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -71,6 +71,18 @@ async function applyAudioFocus(defaultAudioIndex) {
     } catch (e) {}
 }
 
+async function injectContentScriptToWindow(winId) {
+    try {
+        const tabs = await chrome.tabs.query({ windowId: winId });
+        if (tabs[0] && tabs[0].url && (tabs[0].url.startsWith("http://") || tabs[0].url.startsWith("https://"))) {
+            await chrome.scripting.executeScript({
+                target: { tabId: tabs[0].id },
+                files: ['content.js']
+            });
+        }
+    } catch (e) {}
+}
+
 async function launchGrid() {
     let urls = [
         "https://www.espn.com/watch/",
@@ -90,7 +102,6 @@ async function launchGrid() {
         }
     } catch (e) {}
 
-    // Dynamically query user's actual monitor screen dimensions
     let screenWidth = 1440;
     let screenHeight = 900;
     let startX = 0;
@@ -128,7 +139,6 @@ async function launchGrid() {
         let targetHost = "";
         try { targetHost = new URL(targetUrl).hostname; } catch(e) {}
 
-        let matchedWin = null;
         const matchingWinIndex = existingWindows.findIndex(win => {
             return win.tabs.some(tab => {
                 if (!tab.url) return false;
@@ -142,7 +152,7 @@ async function launchGrid() {
         });
 
         if (matchingWinIndex !== -1) {
-            matchedWin = existingWindows.splice(matchingWinIndex, 1)[0];
+            const matchedWin = existingWindows.splice(matchingWinIndex, 1)[0];
             try {
                 await chrome.windows.update(matchedWin.id, {
                     left: b.left,
@@ -158,6 +168,9 @@ async function launchGrid() {
 
                     if (!targetHost || !currentHost || (!currentHost.includes(targetHost) && !targetHost.includes(currentHost))) {
                         await chrome.tabs.update(matchedWin.tabs[0].id, { url: targetUrl });
+                        setTimeout(() => injectContentScriptToWindow(matchedWin.id), 2500);
+                    } else {
+                        injectContentScriptToWindow(matchedWin.id);
                     }
                 }
                 newWindowIds[i] = matchedWin.id;
@@ -174,6 +187,7 @@ async function launchGrid() {
                 });
                 if (newWin && newWin.id) {
                     newWindowIds[i] = newWin.id;
+                    setTimeout(() => injectContentScriptToWindow(newWin.id), 3000);
                 }
             } catch (err) {
                 console.error("[SportsGrid] Error creating window:", err);

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.24",
-  "description": "Legal 4-quadrant sports multi-viewer with dynamic screen detection, custom URLs, and Alt shortcuts.",
+  "version": "1.25",
+  "description": "Legal 4-quadrant sports multi-viewer with robust targeted content script injection (corner speakers & fullscreen locking), dynamic sizing, and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",
