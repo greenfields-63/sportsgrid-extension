@@ -1,5 +1,5 @@
 /**
- * SportsGrid Content Script - Quadrant-locked fullscreen (intercepts standard API and custom CSS player expansions like CBS Sports), and corner speaker button.
+ * SportsGrid Content Script - Quadrant-locked fullscreen and corner speaker button.
  */
 
 (function() {
@@ -73,54 +73,34 @@
         }
     });
 
-    // 2. Robust Fullscreen Interception (Handles both standard API and custom CSS player expansions like CBS Sports)
-    function enforceQuadrantFullscreen(target) {
-        if (!target) return;
-        target.style.position = 'fixed';
-        target.style.top = '0';
-        target.style.left = '0';
-        target.style.width = '100vw';
-        target.style.height = '100vh';
-        target.style.zIndex = '2147483646';
-        target.style.backgroundColor = '#000';
-
-        const escHandler = (e) => {
-            if (e.key === 'Escape') {
-                target.style.position = '';
-                target.style.top = '';
-                target.style.left = '';
-                target.style.width = '';
-                target.style.height = '';
-                target.style.zIndex = '';
-                target.style.backgroundColor = '';
-                document.removeEventListener('keydown', escHandler);
-            }
-        };
-        document.addEventListener('keydown', escHandler);
-    }
-
+    // 2. Standard Quadrant-Locked Fullscreen Interception
     document.addEventListener('fullscreenchange', () => {
         if (document.fullscreenElement) {
+            const target = document.fullscreenElement;
             if (document.exitFullscreen) {
                 document.exitFullscreen().catch(() => {});
             }
-            enforceQuadrantFullscreen(document.fullscreenElement);
+            target.style.position = 'fixed';
+            target.style.top = '0';
+            target.style.left = '0';
+            target.style.width = '100vw';
+            target.style.height = '100vh';
+            target.style.zIndex = '2147483646';
+            target.style.backgroundColor = '#000';
+
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    target.style.position = '';
+                    target.style.top = '';
+                    target.style.left = '';
+                    target.style.width = '';
+                    target.style.height = '';
+                    target.style.zIndex = '';
+                    target.style.backgroundColor = '';
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
         }
     });
-
-    // Intercept clicks on custom player fullscreen/maximize buttons (e.g., CBS Sports, DAZN)
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('button, [role="button"], .fullscreen-button, [class*="fullscreen"], [class*="maximize"], [aria-label*="full" i], [aria-label*="max" i]');
-        if (btn) {
-            setTimeout(() => {
-                const playerContainer = document.querySelector('video, [class*="player"], [class*="video"], [class*="stream"]');
-                if (playerContainer) {
-                    const rect = playerContainer.getBoundingClientRect();
-                    if (rect.width >= window.innerWidth * 0.85 && rect.height >= window.innerHeight * 0.85) {
-                        enforceQuadrantFullscreen(playerContainer.closest('div') || playerContainer);
-                    }
-                }
-            }, 300);
-        }
-    }, true);
 })();

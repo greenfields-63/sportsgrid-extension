@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.26",
-  "description": "Legal 4-quadrant sports multi-viewer with robust custom CSS fullscreen interception (CBS Sports, etc.), corner speakers, dynamic sizing, and Alt shortcuts.",
+  "version": "1.27",
+  "description": "Legal 4-quadrant sports multi-viewer with clean corner speakers, standard quadrant fullscreen locking, dynamic sizing, and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",
