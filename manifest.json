@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.14",
-  "description": "Legal 4-quadrant sports multi-viewer with custom URL input, default audio selector, Alt shortcuts, and smart window recycling.",
+  "version": "1.15",
+  "description": "Legal 4-quadrant sports multi-viewer with unrestricted custom URLs, default audio selector, Alt shortcuts, and smart window recycling.",
   "permissions": [
     "tabs",
     "scripting",
