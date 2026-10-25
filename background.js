@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Spatial grid sorting, smart window recycling, Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - Spatial grid sorting, smart window recycling, Alt+M menu, and Alt+C close.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -21,13 +21,6 @@ chrome.commands.onCommand.addListener(async (command) => {
             width: 280,
             height: 260
         });
-    } else if (command === "vpn-toggle") {
-        await chrome.windows.create({
-            url: "vpn.html",
-            type: "popup",
-            width: 280,
-            height: 180
-        });
     } else if (command === "close-grid") {
         closeGridWindows();
     }
@@ -39,7 +32,6 @@ async function getSortedSportsWindows() {
         const sportsWins = windows.filter(win => {
             return win.type === "popup" && win.tabs && win.tabs.some(tab => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
         });
-        // Sort spatially: top first (y), then left (x)
         sportsWins.sort((a, b) => {
             const topDiff = (a.top || 0) - (b.top || 0);
             if (Math.abs(topDiff) > 50) return topDiff;
@@ -121,7 +113,6 @@ async function launchGrid() {
         let targetHost = "";
         try { targetHost = new URL(targetUrl).hostname; } catch(e) {}
 
-        let matchedWin = null;
         const matchingWinIndex = existingWindows.findIndex(win => {
             return win.tabs.some(tab => {
                 if (!tab.url) return false;
@@ -135,7 +126,7 @@ async function launchGrid() {
         });
 
         if (matchingWinIndex !== -1) {
-            matchedWin = existingWindows.splice(matchingWinIndex, 1)[0];
+            const matchedWin = existingWindows.splice(matchingWinIndex, 1)[0];
             try {
                 await chrome.windows.update(matchedWin.id, {
                     left: b.left,

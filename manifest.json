@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.21",
-  "description": "Legal 4-quadrant sports multi-viewer with spatial grid sorting for 1-click corner speakers, smart window recycling, and Alt shortcuts.",
+  "version": "1.22",
+  "description": "Legal 4-quadrant sports multi-viewer with corner speaker switcher, Alt+S quick audio switch, Alt+M menu, and Alt+C close.",
   "permissions": [
     "tabs",
     "scripting",
@@ -32,13 +32,6 @@
         "mac": "Alt+S"
       },
       "description": "Open Quick Audio Switcher"
-    },
-    "vpn-toggle": {
-      "suggested_key": {
-        "default": "Alt+V",
-        "mac": "Alt+V"
-      },
-      "description": "Open VPN Helper"
     },
     "close-grid": {
       "suggested_key": {
