@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Unrestricted custom URL support, smart window recycling, default audio selector, Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - 1-to-1 quadrant index mapping (seamless channel switching without layering), Alt+M, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -35,30 +35,10 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 async function closeGridWindows() {
     try {
-        let savedUrls = [];
-        const stored = await chrome.storage.local.get("sportsgrid_urls");
-        if (stored.sportsgrid_urls && Array.isArray(stored.sportsgrid_urls)) {
-            savedUrls = stored.sportsgrid_urls.map(u => {
-                try { return new URL(u).hostname; } catch(e) { return ""; }
-            }).filter(Boolean);
-        }
-
         const windows = await chrome.windows.getAll({ populate: true });
         for (const win of windows) {
-            if (win.type === "popup" && win.tabs) {
-                const isSportsWindow = win.tabs.some(tab => {
-                    if (!tab.url) return false;
-                    try {
-                        const tabHost = new URL(tab.url).hostname;
-                        // Match any popup window whose host matches any saved URL or custom domain
-                        return savedUrls.some(h => tabHost.includes(h) || h.includes(tabHost));
-                    } catch(e) {
-                        return false;
-                    }
-                });
-                if (isSportsWindow) {
-                    await chrome.windows.remove(win.id);
-                }
+            if (win.type === "popup" && win.tabs && win.tabs.some(t => t.url && (t.url.startsWith("http://") || t.url.startsWith("https://")))) {
+                await chrome.windows.remove(win.id);
             }
         }
     } catch (e) {}
@@ -66,30 +46,15 @@ async function closeGridWindows() {
 
 async function applyAudioFocus(defaultAudioIndex) {
     try {
-        let savedUrls = [];
-        const stored = await chrome.storage.local.get(["sportsgrid_urls", "sportsgrid_audio_index"]);
-        if (stored.sportsgrid_urls && Array.isArray(stored.sportsgrid_urls)) {
-            savedUrls = stored.sportsgrid_urls.map(u => {
-                try { return new URL(u).hostname; } catch(e) { return ""; }
-            }).filter(Boolean);
-        }
-        const audioIdx = typeof stored.sportsgrid_audio_index === 'number' ? stored.sportsgrid_audio_index : defaultAudioIndex;
-
         const windows = await chrome.windows.getAll({ populate: true });
         const sportsWindows = windows.filter(win => {
-            return win.type === "popup" && win.tabs && win.tabs.some(tab => {
-                if (!tab.url) return false;
-                try {
-                    const tabHost = new URL(tab.url).hostname;
-                    return savedUrls.some(h => tabHost.includes(h) || h.includes(tabHost));
-                } catch(e) {
-                    return false;
-                }
-            });
+            return win.type === "popup" && win.tabs && win.tabs.some(tab => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
         });
 
+        await chrome.storage.local.set({ sportsgrid_audio_index: defaultAudioIndex });
+
         for (let i = 0; i < sportsWindows.length; i++) {
-            const shouldMute = (i !== audioIdx);
+            const shouldMute = (i !== defaultAudioIndex);
             const win = sportsWindows[i];
             for (const tab of win.tabs) {
                 await chrome.tabs.update(tab.id, { muted: shouldMute });
@@ -129,58 +94,32 @@ async function launchGrid() {
         { left: halfWidth, top: halfHeight, width: screenWidth - halfWidth, height: screenHeight - halfHeight }
     ];
 
-    let savedHosts = [];
-    try {
-        savedHosts = urls.map(u => {
-            try { return new URL(u).hostname; } catch(e) { return ""; }
-        }).filter(Boolean);
-    } catch(e) {}
-
     let existingWindows = [];
     try {
         const windows = await chrome.windows.getAll({ populate: true });
         existingWindows = windows.filter(win => {
-            return win.type === "popup" && win.tabs && win.tabs.some(tab => {
-                if (!tab.url) return false;
-                try {
-                    const tabHost = new URL(tab.url).hostname;
-                    return savedHosts.some(h => tabHost.includes(h) || h.includes(tabHost));
-                } catch(e) {
-                    return false;
-                }
-            });
+            return win.type === "popup" && win.tabs && win.tabs.some(tab => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
         });
     } catch (e) {}
 
-    for (let i = 0; i < urls.length; i++) {
+    for (let i = 0; i < 4; i++) {
         if (!urls[i]) continue;
         const targetUrl = urls[i];
         const b = boundsList[i];
-        let targetHost = "";
-        try { targetHost = new URL(targetUrl).hostname; } catch(e) {}
 
-        const matchingWinIndex = existingWindows.findIndex(win => {
-            return win.tabs.some(tab => {
-                if (!tab.url) return false;
-                try {
-                    const tabHost = new URL(tab.url).hostname;
-                    return targetHost && (tabHost.includes(targetHost) || targetHost.includes(tabHost));
-                } catch(e) {
-                    return false;
-                }
-            });
-        });
-
-        if (matchingWinIndex !== -1) {
-            const matchedWin = existingWindows.splice(matchingWinIndex, 1)[0];
+        if (existingWindows[i]) {
+            const win = existingWindows[i];
             try {
-                await chrome.windows.update(matchedWin.id, {
+                await chrome.windows.update(win.id, {
                     left: b.left,
                     top: b.top,
                     width: b.width,
                     height: b.height,
                     focused: true
                 });
+                if (win.tabs[0] && win.tabs[0].url !== targetUrl) {
+                    await chrome.tabs.update(win.tabs[0].id, { url: targetUrl });
+                }
             } catch (err) {}
         } else {
             try {
@@ -198,9 +137,9 @@ async function launchGrid() {
         }
     }
 
-    for (const leftoverWin of existingWindows) {
+    for (let i = 4; i < existingWindows.length; i++) {
         try {
-            await chrome.windows.remove(leftoverWin.id);
+            await chrome.windows.remove(existingWindows[i].id);
         } catch (e) {}
     }
 
@@ -219,25 +158,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     } else if (request.action === "make-active-audio") {
         if (sender.tab && sender.tab.windowId) {
             try {
-                let savedHosts = [];
-                const stored = await chrome.storage.local.get("sportsgrid_urls");
-                if (stored.sportsgrid_urls && Array.isArray(stored.sportsgrid_urls)) {
-                    savedHosts = stored.sportsgrid_urls.map(u => {
-                        try { return new URL(u).hostname; } catch(e) { return ""; }
-                    }).filter(Boolean);
-                }
-
                 const windows = await chrome.windows.getAll({ populate: true });
                 const sportsWindows = windows.filter(win => {
-                    return win.type === "popup" && win.tabs && win.tabs.some(tab => {
-                        if (!tab.url) return false;
-                        try {
-                            const tabHost = new URL(tab.url).hostname;
-                            return savedHosts.some(h => tabHost.includes(h) || h.includes(tabHost));
-                        } catch(e) {
-                            return false;
-                        }
-                    });
+                    return win.type === "popup" && win.tabs && win.tabs.some(tab => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
                 });
                 const index = sportsWindows.findIndex(win => win.id === sender.tab.windowId);
                 if (index !== -1) {
