@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Programmatic script injection (exclusive to grid windows), slot tracking, and Alt shortcuts.
+ * SportsGrid Background Service Worker - Dynamic screen resolution detection, 1-to-1 quadrant mapping, Alt+M, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -81,7 +81,7 @@ async function launchGrid() {
     let defaultAudioIndex = 0;
 
     try {
-        const stored = await chrome.storage.local.get(["sportsgrid_urls", "sportsgrid_audio_index", "sportsgrid_window_ids"]);
+        const stored = await chrome.storage.local.get(["sportsgrid_urls", "sportsgrid_audio_index"]);
         if (stored.sportsgrid_urls && Array.isArray(stored.sportsgrid_urls)) {
             urls = stored.sportsgrid_urls;
         }
@@ -90,80 +90,79 @@ async function launchGrid() {
         }
     } catch (e) {}
 
-    const screenWidth = 1440;
-    const screenHeight = 900;
+    // Dynamically query user's actual monitor screen dimensions
+    let screenWidth = 1440;
+    let screenHeight = 900;
+    let startX = 0;
+    let startY = 0;
+
+    try {
+        const displayInfo = await chrome.system.display.getInfo();
+        const primary = displayInfo.find(d => d.isPrimary) || displayInfo[0];
+        if (primary && primary.workArea) {
+            screenWidth = primary.workArea.width;
+            screenHeight = primary.workArea.height;
+            startX = primary.workArea.left || 0;
+            startY = primary.workArea.top || 0;
+        }
+    } catch (e) {}
+
     const halfWidth = Math.floor(screenWidth / 2);
     const halfHeight = Math.floor(screenHeight / 2);
 
     const boundsList = [
-        { left: 0, top: 0, width: halfWidth, height: halfHeight },
-        { left: halfWidth, top: 0, width: screenWidth - halfWidth, height: halfHeight },
-        { left: 0, top: halfHeight, width: halfWidth, height: screenHeight - halfHeight },
-        { left: halfWidth, top: halfHeight, width: screenWidth - halfWidth, height: screenHeight - halfHeight }
+        { left: startX, top: startY, width: halfWidth, height: halfHeight },
+        { left: startX + halfWidth, top: startY, width: screenWidth - halfWidth, height: halfHeight },
+        { left: startX, top: startY + halfHeight, width: halfWidth, height: screenHeight - halfHeight },
+        { left: startX + halfWidth, top: startY + halfHeight, width: screenWidth - halfWidth, height: screenHeight - halfHeight }
     ];
 
-    let currentWindowIds = [null, null, null, null];
-    try {
-        const stored = await chrome.storage.local.get("sportsgrid_window_ids");
-        if (stored.sportsgrid_window_ids && Array.isArray(stored.sportsgrid_window_ids)) {
-            currentWindowIds = stored.sportsgrid_window_ids;
-        }
-    } catch (e) {}
-
+    let existingWindows = await getSortedSportsWindows();
     const newWindowIds = [null, null, null, null];
 
     for (let i = 0; i < 4; i++) {
         if (!urls[i]) continue;
         const targetUrl = urls[i];
         const b = boundsList[i];
-        const existingWinId = currentWindowIds[i];
 
         let targetHost = "";
         try { targetHost = new URL(targetUrl).hostname; } catch(e) {}
 
-        let windowExists = false;
-        if (existingWinId) {
-            try {
-                const win = await chrome.windows.get(existingWinId, { populate: true });
-                if (win && win.type === "popup") {
-                    windowExists = true;
-                    await chrome.windows.update(win.id, {
-                        left: b.left,
-                        top: b.top,
-                        width: b.width,
-                        height: b.height,
-                        focused: true
-                    });
-                    if (win.tabs && win.tabs[0]) {
-                        const currentTabUrl = win.tabs[0].url || "";
-                        let currentHost = "";
-                        try { currentHost = new URL(currentTabUrl).hostname; } catch(e) {}
-
-                        if (!targetHost || !currentHost || (!currentHost.includes(targetHost) && !targetHost.includes(currentHost))) {
-                            await chrome.tabs.update(win.tabs[0].id, { url: targetUrl });
-                            setTimeout(async () => {
-                                try {
-                                    await chrome.scripting.executeScript({
-                                        target: { tabId: win.tabs[0].id },
-                                        files: ['content.js']
-                                    });
-                                } catch (e) {}
-                            }, 2500);
-                        } else {
-                            try {
-                                await chrome.scripting.executeScript({
-                                    target: { tabId: win.tabs[0].id },
-                                    files: ['content.js']
-                                });
-                            } catch (e) {}
-                        }
-                    }
-                    newWindowIds[i] = win.id;
+        let matchedWin = null;
+        const matchingWinIndex = existingWindows.findIndex(win => {
+            return win.tabs.some(tab => {
+                if (!tab.url) return false;
+                try {
+                    const tabHost = new URL(tab.url).hostname;
+                    return targetHost && (tabHost.includes(targetHost) || targetHost.includes(tabHost));
+                } catch(e) {
+                    return false;
                 }
-            } catch (err) {}
-        }
+            });
+        });
 
-        if (!windowExists) {
+        if (matchingWinIndex !== -1) {
+            matchedWin = existingWindows.splice(matchingWinIndex, 1)[0];
+            try {
+                await chrome.windows.update(matchedWin.id, {
+                    left: b.left,
+                    top: b.top,
+                    width: b.width,
+                    height: b.height,
+                    focused: true
+                });
+                if (matchedWin.tabs && matchedWin.tabs[0]) {
+                    const currentTabUrl = matchedWin.tabs[0].url || "";
+                    let currentHost = "";
+                    try { currentHost = new URL(currentTabUrl).hostname; } catch(e) {}
+
+                    if (!targetHost || !currentHost || (!currentHost.includes(targetHost) && !targetHost.includes(currentHost))) {
+                        await chrome.tabs.update(matchedWin.tabs[0].id, { url: targetUrl });
+                    }
+                }
+                newWindowIds[i] = matchedWin.id;
+            } catch (err) {}
+        } else {
             try {
                 const newWin = await chrome.windows.create({
                     url: targetUrl,
@@ -175,17 +174,6 @@ async function launchGrid() {
                 });
                 if (newWin && newWin.id) {
                     newWindowIds[i] = newWin.id;
-                    setTimeout(async () => {
-                        try {
-                            const tabs = await chrome.tabs.query({ windowId: newWin.id });
-                            if (tabs[0]) {
-                                await chrome.scripting.executeScript({
-                                    target: { tabId: tabs[0].id },
-                                    files: ['content.js']
-                                });
-                            }
-                        } catch (e) {}
-                    }, 3000);
                 }
             } catch (err) {
                 console.error("[SportsGrid] Error creating window:", err);
@@ -195,11 +183,8 @@ async function launchGrid() {
 
     await chrome.storage.local.set({ sportsgrid_window_ids: newWindowIds });
 
-    let existingSportsWins = await getSortedSportsWindows();
-    for (const win of existingSportsWins) {
-        if (!newWindowIds.includes(win.id)) {
-            try { await chrome.windows.remove(win.id); } catch (e) {}
-        }
+    for (const leftoverWin of existingWindows) {
+        try { await chrome.windows.remove(leftoverWin.id); } catch (e) {}
     }
 
     setTimeout(() => {

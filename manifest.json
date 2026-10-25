@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.23",
-  "description": "Legal 4-quadrant sports multi-viewer with targeted programmatic window injection for corner speakers, custom URLs, and Alt shortcuts.",
+  "version": "1.24",
+  "description": "Legal 4-quadrant sports multi-viewer with dynamic screen detection, custom URLs, and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",
     "windows",
-    "storage"
+    "storage",
+    "system.display"
   ],
   "host_permissions": [
     "https://*/*"
