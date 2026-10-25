@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SportsGrid Multi-Viewer",
-  "version": "1.16",
-  "description": "Legal 4-quadrant sports multi-viewer with 1-to-1 quadrant index mapping (seamless channel switching), default audio selector, and Alt shortcuts.",
+  "version": "1.17",
+  "description": "Legal 4-quadrant sports multi-viewer with Cancel button on Alt+M menu, 1-to-1 quadrant mapping, and Alt shortcuts.",
   "permissions": [
     "tabs",
     "scripting",

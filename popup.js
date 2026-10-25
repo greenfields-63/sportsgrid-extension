@@ -65,6 +65,10 @@ for (let i = 0; i < 4; i++) {
     }
 }
 
+document.getElementById('cancel-btn').addEventListener('click', () => {
+    window.close();
+});
+
 document.getElementById('save-btn').addEventListener('click', async () => {
     const urls = [
         document.getElementById('q0').value,
