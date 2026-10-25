@@ -1,5 +1,5 @@
 /**
- * SportsGrid Background Service Worker - Persistent quadrant slot tracking (zero unedited reloads), Alt+M, and Alt+C.
+ * SportsGrid Background Service Worker - Robust corner speaker switching, persistent slot tracking, Alt+M, and Alt+C.
  */
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -63,6 +63,9 @@ async function applyAudioFocus(defaultAudioIndex) {
                 const tabs = await chrome.tabs.query({ windowId: winId, active: true });
                 for (const tab of tabs) {
                     await chrome.tabs.update(tab.id, { muted: shouldMute });
+                    try {
+                        await chrome.tabs.sendMessage(tab.id, { action: "update-speaker-state", isMuted: shouldMute });
+                    } catch (e) {}
                 }
             } catch (e) {}
         }
@@ -122,7 +125,6 @@ async function launchGrid() {
                 const win = await chrome.windows.get(existingWinId, { populate: true });
                 if (win && win.type === "popup") {
                     windowExists = true;
-                    // Update bounds
                     await chrome.windows.update(win.id, {
                         left: b.left,
                         top: b.top,
@@ -130,7 +132,6 @@ async function launchGrid() {
                         height: b.height,
                         focused: true
                     });
-                    // Update URL ONLY if changed
                     if (win.tabs && win.tabs[0]) {
                         const currentTabUrl = win.tabs[0].url || "";
                         if (currentTabUrl !== targetUrl) {
@@ -186,7 +187,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             try {
                 const stored = await chrome.storage.local.get("sportsgrid_window_ids");
                 const windowIds = stored.sportsgrid_window_ids || [];
-                const index = windowIds.indexOf(sender.tab.windowId);
+                let index = windowIds.findIndex(id => Number(id) === Number(sender.tab.windowId));
+                if (index === -1) {
+                    const windows = await chrome.windows.getAll({ populate: true });
+                    const sportsWindows = windows.filter(win => {
+                        return win.type === "popup" && win.tabs && win.tabs.some(tab => tab.url && (tab.url.startsWith("http://") || tab.url.startsWith("https://")));
+                    });
+                    index = sportsWindows.findIndex(win => win.id === sender.tab.windowId);
+                }
                 if (index !== -1) {
                     applyAudioFocus(index);
                 }
